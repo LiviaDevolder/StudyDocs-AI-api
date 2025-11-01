@@ -7,6 +7,7 @@ import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ProjectsModule } from './projects/projects.module';
+import { DocumentsModule } from './documents/documents.module';
 import { validate } from './config/env.validation';
 import databaseConfig from './config/database.config';
 
@@ -38,6 +39,7 @@ import databaseConfig from './config/database.config';
       playground: true,
     }),
     ProjectsModule,
+    DocumentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

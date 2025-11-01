@@ -4,8 +4,10 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 import { ObjectType, Field, ID } from '@nestjs/graphql';
+import { Document } from '../../documents/entities/document.entity';
 
 @Entity('projects')
 @ObjectType()
@@ -29,4 +31,8 @@ export class Project {
   @UpdateDateColumn({ type: 'timestamp' })
   @Field()
   updatedAt: Date;
+
+  @OneToMany(() => Document, (document) => document.project)
+  @Field(() => [Document], { nullable: true })
+  documents: Document[];
 }
