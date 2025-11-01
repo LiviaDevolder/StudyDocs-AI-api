@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   postgres:
-    image: postgres:17-alpine
+    image: pgvector/pgvector:0.7.4-pg17
     container_name: studydocs-postgres
     restart: unless-stopped
     ports:
@@ -13,6 +11,7 @@ services:
       POSTGRES_DB: ${DB_DATABASE:-studydocs}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME:-postgres}']
       interval: 10s
