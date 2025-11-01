@@ -10,8 +10,8 @@ import {
 import { Project } from '../../projects/entities/project.entity';
 
 @ObjectType()
-@Entity('documents')
-export class Document {
+@Entity('messages')
+export class Message {
   @Field(() => ID)
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -26,18 +26,14 @@ export class Document {
   project: Project;
 
   @Field()
-  @Column()
-  name: string;
+  @Column({ type: 'text' })
+  query: string;
 
   @Field()
-  @Column({ name: 'gcs_path' })
-  gcsPath: string;
+  @Column({ type: 'text' })
+  response: string;
 
   @Field()
-  @Column()
-  type: string;
-
-  @Field()
-  @CreateDateColumn({ name: 'uploaded_at' })
-  uploadedAt: Date;
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
 }

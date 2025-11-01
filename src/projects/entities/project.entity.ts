@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { ObjectType, Field, ID } from '@nestjs/graphql';
 import { Document } from '../../documents/entities/document.entity';
+import { Message } from '../../messages/entities/message.entity';
 
 @Entity('projects')
 @ObjectType()
@@ -35,4 +36,8 @@ export class Project {
   @OneToMany(() => Document, (document) => document.project)
   @Field(() => [Document], { nullable: true })
   documents: Document[];
+
+  @OneToMany(() => Message, (message) => message.project)
+  @Field(() => [Message], { nullable: true })
+  messages: Message[];
 }
