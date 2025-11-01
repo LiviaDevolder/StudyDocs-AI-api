@@ -6,8 +6,10 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { Project } from '../../projects/entities/project.entity';
+import { DocumentChunk } from '../../document-chunks/entities/document-chunk.entity';
 
 @ObjectType()
 @Entity('documents')
@@ -40,4 +42,8 @@ export class Document {
   @Field()
   @CreateDateColumn({ name: 'uploaded_at' })
   uploadedAt: Date;
+
+  @Field(() => [DocumentChunk])
+  @OneToMany(() => DocumentChunk, (documentChunk) => documentChunk.document)
+  chunks: DocumentChunk[];
 }

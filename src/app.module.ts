@@ -9,6 +9,7 @@ import { AppService } from './app.service';
 import { ProjectsModule } from './projects/projects.module';
 import { DocumentsModule } from './documents/documents.module';
 import { MessagesModule } from './messages/messages.module';
+import { DocumentChunksModule } from './document-chunks/document-chunks.module';
 import { validate } from './config/env.validation';
 import databaseConfig from './config/database.config';
 
@@ -42,6 +43,7 @@ import databaseConfig from './config/database.config';
     ProjectsModule,
     DocumentsModule,
     MessagesModule,
+    DocumentChunksModule,
   ],
   controllers: [AppController],
   providers: [AppService],

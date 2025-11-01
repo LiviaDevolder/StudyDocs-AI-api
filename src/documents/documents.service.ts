@@ -26,7 +26,7 @@ export class DocumentsService {
   async findOne(id: string): Promise<Document> {
     const document = await this.documentRepository.findOne({
       where: { id },
-      relations: ['project'],
+      relations: ['project', 'chunks'],
     });
 
     if (!document) {
@@ -39,7 +39,7 @@ export class DocumentsService {
   async findByProject(projectId: string): Promise<Document[]> {
     return await this.documentRepository.find({
       where: { projectId },
-      relations: ['project'],
+      relations: ['project', 'chunks'],
     });
   }
 

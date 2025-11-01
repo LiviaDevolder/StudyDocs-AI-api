@@ -26,7 +26,9 @@ export class DocumentsResolver {
   }
 
   @Query(() => [Document], { name: 'documentsByProject' })
-  async findByProject(@Args('projectId') projectId: string): Promise<Document[]> {
+  async findByProject(
+    @Args('projectId') projectId: string,
+  ): Promise<Document[]> {
     return await this.documentsService.findByProject(projectId);
   }
 
