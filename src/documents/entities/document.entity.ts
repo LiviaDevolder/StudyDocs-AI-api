@@ -1,4 +1,4 @@
-import { ObjectType, Field, ID } from '@nestjs/graphql';
+import { ObjectType, Field, ID, Int, registerEnumType } from '@nestjs/graphql';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -10,6 +10,18 @@ import {
 } from 'typeorm';
 import { Project } from '../../projects/entities/project.entity';
 import { DocumentChunk } from '../../document-chunks/entities/document-chunk.entity';
+
+export enum DocumentStatus {
+  PENDING = 'pending',
+  PROCESSING = 'processing',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+}
+
+registerEnumType(DocumentStatus, {
+  name: 'DocumentStatus',
+  description: 'The processing status of a document',
+});
 
 @ObjectType()
 @Entity('documents')
@@ -38,6 +50,18 @@ export class Document {
   @Field()
   @Column()
   type: string;
+
+  @Field(() => DocumentStatus)
+  @Column({
+    type: 'varchar',
+    length: 20,
+    default: DocumentStatus.PENDING,
+  })
+  status: DocumentStatus;
+
+  @Field(() => Int, { description: 'File size in bytes' })
+  @Column({ name: 'file_size', type: 'bigint', default: 0 })
+  fileSize: number;
 
   @Field()
   @CreateDateColumn({ name: 'uploaded_at' })
