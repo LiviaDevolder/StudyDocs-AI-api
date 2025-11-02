@@ -6,6 +6,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { UsersModule } from './users/users.module';
 import { ProjectsModule } from './projects/projects.module';
 import { DocumentsModule } from './documents/documents.module';
 import { MessagesModule } from './messages/messages.module';
@@ -40,6 +41,7 @@ import databaseConfig from './config/database.config';
       sortSchema: true,
       playground: true,
     }),
+    UsersModule,
     ProjectsModule,
     DocumentsModule,
     MessagesModule,

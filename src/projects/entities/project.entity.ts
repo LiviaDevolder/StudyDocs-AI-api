@@ -5,8 +5,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { ObjectType, Field, ID } from '@nestjs/graphql';
+import { User } from '../../users/entities/user.entity';
 import { Document } from '../../documents/entities/document.entity';
 import { Message } from '../../messages/entities/message.entity';
 
@@ -24,6 +27,11 @@ export class Project {
   @Column({ type: 'uuid' })
   @Field()
   userId: string;
+
+  @Field(() => User)
+  @ManyToOne(() => User, (user) => user.projects)
+  @JoinColumn({ name: 'userId' })
+  user: User;
 
   @CreateDateColumn({ type: 'timestamp' })
   @Field()
