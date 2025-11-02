@@ -17,6 +17,7 @@ import { validate } from './config/env.validation';
 import { MessageChunkReferencesModule } from './message-chunk-references/message-chunk-references.module';
 import { DocumentProcessingJobsModule } from './document-processing-jobs/document-processing-jobs.module';
 import databaseConfig from './config/database.config';
+import { getTypeOrmConfig } from './config/typeorm.config';
 
 @Module({
   imports: [
@@ -27,16 +28,15 @@ import databaseConfig from './config/database.config';
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get<string>('database.host'),
-        port: configService.get<number>('database.port'),
-        username: configService.get<string>('database.username'),
-        password: configService.get<string>('database.password'),
-        database: configService.get<string>('database.database'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true,
-      }),
+      useFactory: (configService: ConfigService) =>
+        getTypeOrmConfig({
+          host: configService.get<string>('database.host'),
+          port: configService.get<number>('database.port'),
+          username: configService.get<string>('database.username'),
+          password: configService.get<string>('database.password'),
+          database: configService.get<string>('database.database'),
+          nodeEnv: configService.get<string>('NODE_ENV'),
+        }),
       inject: [ConfigService],
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
