@@ -1,10 +1,15 @@
 import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
 import { DocumentsService } from './documents.service';
 import { Document } from './entities/document.entity';
 import { CreateDocumentInput } from './dto/create-document.dto';
 import { UpdateDocumentInput } from './dto/update-document.dto';
-import { UseInterceptors, UploadedFile } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { GqlAuthGuard } from '../auth/guards/gql-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { User } from '../users/entities/user.entity';
+import { FileUpload } from '../types/graphql-upload';
+import GraphQLUpload from 'graphql-upload/GraphQLUpload.mjs';
+import { FileValidationPipe } from '../common/pipes/file-validation.pipe';
 
 @Resolver(() => Document)
 export class DocumentsResolver {
@@ -48,11 +53,13 @@ export class DocumentsResolver {
   }
 
   @Mutation(() => Document)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseGuards(GqlAuthGuard)
   async uploadDocument(
     @Args('projectId') projectId: string,
-    @UploadedFile() file: Express.Multer.File,
+    @Args({ name: 'file', type: () => GraphQLUpload }, FileValidationPipe)
+    file: Promise<FileUpload>,
+    @CurrentUser() user: User,
   ): Promise<Document> {
-    return await this.documentsService.uploadDocument(projectId, file);
+    return await this.documentsService.uploadDocument(projectId, file, user);
   }
 }

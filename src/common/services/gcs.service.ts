@@ -1,7 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Storage, Bucket } from '@google-cloud/storage';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
+
+export interface UploadFileInput {
+  buffer: Buffer;
+  originalname: string;
+  mimetype: string;
+  size: number;
+}
 
 export interface UploadedFileInfo {
   fileName: string;
@@ -23,23 +30,51 @@ export class GcsService {
     const bucketName = this.configService.get<string>('gcs.bucketName');
     const keyFilename = this.configService.get<string>('gcs.keyFilename');
 
+    if (!projectId) {
+      this.logger.error(
+        'GCS_PROJECT_ID is not configured in environment variables',
+      );
+      throw new Error(
+        'GCS_PROJECT_ID is not configured. Please set it in your .env file.',
+      );
+    }
+
     if (!bucketName) {
-      throw new Error('GCS_BUCKET_NAME is not configured');
+      this.logger.error(
+        'GCS_BUCKET_NAME is not configured in environment variables',
+      );
+      throw new Error(
+        'GCS_BUCKET_NAME is not configured. Please set it in your .env file.',
+      );
     }
 
     this.bucketName = bucketName;
 
-    this.storage = new Storage({
-      projectId,
-      keyFilename,
-    });
+    try {
+      // Se keyFilename não estiver definido, usa Application Default Credentials
+      this.storage = new Storage({
+        projectId,
+        ...(keyFilename && { keyFilename }),
+      });
 
-    this.bucket = this.storage.bucket(bucketName);
-    this.logger.log(`GCS initialized with bucket: ${bucketName}`);
+      this.bucket = this.storage.bucket(bucketName);
+
+      this.logger.log(`GCS initialized successfully`);
+      this.logger.log(`  Project ID: ${projectId}`);
+      this.logger.log(`  Bucket: ${bucketName}`);
+      this.logger.log(
+        `  Auth: ${keyFilename ? 'Service Account Key' : 'Application Default Credentials'}`,
+      );
+    } catch (error) {
+      this.logger.error('Failed to initialize GCS Storage', error);
+      throw new Error(
+        `Failed to initialize Google Cloud Storage: ${error.message}`,
+      );
+    }
   }
 
   async uploadFile(
-    file: Express.Multer.File,
+    file: UploadFileInput,
     folder: string = 'documents',
   ): Promise<UploadedFileInfo> {
     try {
@@ -60,13 +95,13 @@ export class GcsService {
         },
       });
 
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve, reject): void => {
         blobStream.on('error', (error) => {
           this.logger.error(`Upload error: ${error.message}`);
           reject(error);
         });
 
-        blobStream.on('finish', async () => {
+        blobStream.on('finish', (): UploadedFileInfo => {
           const publicUrl = `https://storage.googleapis.com/${this.bucketName}/${gcsPath}`;
 
           const uploadedFileInfo: UploadedFileInfo = {
@@ -79,6 +114,8 @@ export class GcsService {
 
           this.logger.log(`File uploaded successfully: ${gcsPath}`);
           resolve(uploadedFileInfo);
+
+          return uploadedFileInfo;
         });
 
         blobStream.end(file.buffer);
@@ -99,10 +136,7 @@ export class GcsService {
     }
   }
 
-  async getSignedUrl(
-    gcsPath: string,
-    expiresIn: number = 60,
-  ): Promise<string> {
+  async getSignedUrl(gcsPath: string, expiresIn: number = 60): Promise<string> {
     try {
       const [url] = await this.bucket.file(gcsPath).getSignedUrl({
         action: 'read',
@@ -131,7 +165,7 @@ export class GcsService {
 
   private generateFileName(originalName: string): string {
     const timestamp = Date.now();
-    const uuid = uuidv4();
+    const uuid = randomUUID();
     const extension = originalName.split('.').pop();
     const baseName = originalName
       .split('.')

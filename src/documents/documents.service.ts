@@ -1,16 +1,30 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Document, DocumentStatus } from './entities/document.entity';
 import { CreateDocumentInput } from './dto/create-document.dto';
 import { UpdateDocumentInput } from './dto/update-document.dto';
-import { GcsService } from '../common/services/gcs.service';
+import { GcsService, UploadFileInput } from '../common/services/gcs.service';
+import { User } from '../users/entities/user.entity';
+import { Project } from '../projects/entities/project.entity';
+import { FileUpload } from '../types/graphql-upload';
+import { uploadConfig } from '../config/upload.config';
 
 @Injectable()
 export class DocumentsService {
+  private readonly logger = new Logger(DocumentsService.name);
+
   constructor(
     @InjectRepository(Document)
     private readonly documentRepository: Repository<Document>,
+    @InjectRepository(Project)
+    private readonly projectRepository: Repository<Project>,
     private readonly gcsService: GcsService,
   ) {}
 
@@ -61,66 +75,103 @@ export class DocumentsService {
     } catch (error) {
       console.error(`Failed to delete file from GCS: ${error.message}`);
     }
-    
+
     await this.documentRepository.remove(document);
     return true;
   }
   async uploadDocument(
     projectId: string,
-    file: Express.Multer.File,
+    filePromise: Promise<FileUpload>,
+    user: User,
   ): Promise<Document> {
-    if (!file) {
-      throw new BadRequestException('No file provided');
+    // Verify project exists and user owns it
+    const project = await this.projectRepository.findOne({
+      where: { id: projectId },
+    });
+
+    if (!project) {
+      throw new NotFoundException(`Project with ID ${projectId} not found`);
     }
 
-    const allowedMimeTypes = [
-      'text/plain',
-      'text/markdown',
-      'application/pdf',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'image/jpeg',
-      'image/png',
-      'image/gif',
-      'image/webp',
-      'image/svg+xml',
-      'image/bmp',
-      'image/tiff',
-    ];
-
-    if (!allowedMimeTypes.includes(file.mimetype)) {
-      throw new BadRequestException(
-        `File type ${file.mimetype} not supported. Allowed types: TXT, MD, PDF, DOCX, and images (JPEG, PNG, GIF, WebP, SVG, BMP, TIFF)`,
+    if (project.userId !== user.id) {
+      throw new ForbiddenException(
+        'You do not have permission to upload documents to this project',
       );
     }
 
-    const maxSize = 50 * 1024 * 1024; // 50MB
-    if (file.size > maxSize) {
-      throw new BadRequestException(
-        `File size exceeds maximum allowed size of 50MB`,
-      );
-    }
+    // Get file from promise (validation already done by FileValidationPipe)
+    const fileUpload = await filePromise;
 
     try {
+      // Read file stream into buffer with size limit
+      const chunks: Uint8Array[] = [];
+      let totalSize = 0;
+
+      const stream = fileUpload.createReadStream();
+
+      for await (const chunk of stream) {
+        const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+        totalSize += buffer.length;
+
+        // Check size limit during streaming
+        if (totalSize > uploadConfig.maxFileSize) {
+          stream.destroy();
+          throw new BadRequestException(
+            `File size exceeds maximum allowed size of ${uploadConfig.maxFileSize / (1024 * 1024)}MB`,
+          );
+        }
+
+        chunks.push(buffer);
+      }
+
+      const buffer = Buffer.concat(chunks);
+
+      // Create file input for GcsService
+      const fileInput: UploadFileInput = {
+        buffer,
+        originalname: fileUpload.filename,
+        mimetype: fileUpload.mimetype,
+        size: totalSize,
+      };
+
+      // Upload to GCS
       const uploadedFileInfo = await this.gcsService.uploadFile(
-        file,
+        fileInput,
         `projects/${projectId}`,
       );
 
+      this.logger.log(
+        `File "${fileUpload.filename}" uploaded successfully for project ${projectId} by user ${user.id}`,
+      );
+
+      // Save document metadata to database
       const document = this.documentRepository.create({
         projectId,
-        name: file.originalname,
+        name: fileUpload.filename,
         gcsPath: uploadedFileInfo.gcsPath,
-        type: uploadedFileInfo.mimeType,
-        fileSize: uploadedFileInfo.size,
+        type: fileUpload.mimetype,
+        fileSize: totalSize,
         status: DocumentStatus.PENDING,
       });
 
       return await this.documentRepository.save(document);
     } catch (error) {
+      this.logger.error(
+        `Failed to upload document for project ${projectId}: ${error.message}`,
+        error.stack,
+      );
+
+      if (
+        error instanceof BadRequestException ||
+        error instanceof ForbiddenException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+
       throw new BadRequestException(
         `Failed to upload document: ${error.message}`,
       );
     }
   }
 }
-

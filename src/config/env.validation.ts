@@ -16,6 +16,11 @@ const envSchema = z.object({
 
   // GCP (optional)
   VERTEX_API_KEY: z.string().optional(),
+
+  // Google Cloud Storage (required for file uploads)
+  GCS_PROJECT_ID: z.string().min(1, 'GCS_PROJECT_ID is required'),
+  GCS_BUCKET_NAME: z.string().min(1, 'GCS_BUCKET_NAME is required'),
+  GCS_KEY_FILENAME: z.string().optional(),
 });
 
 export function validate(config: Record<string, unknown>) {
