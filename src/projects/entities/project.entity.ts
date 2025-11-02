@@ -7,6 +7,7 @@ import {
   OneToMany,
   ManyToOne,
   JoinColumn,
+  Unique,
 } from 'typeorm';
 import { ObjectType, Field, ID } from '@nestjs/graphql';
 import { User } from '../../users/entities/user.entity';
@@ -16,6 +17,7 @@ import { Conversation } from '../../conversations/entities/conversation.entity';
 
 @Entity('projects')
 @ObjectType()
+@Unique(['name', 'userId'])
 export class Project {
   @PrimaryGeneratedColumn('uuid')
   @Field(() => ID)

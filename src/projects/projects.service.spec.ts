@@ -5,6 +5,8 @@ import { Project } from './entities/project.entity';
 import { CreateProjectInput } from './dto/create-project.dto';
 import { UpdateProjectInput } from './dto/update-project.dto';
 import { createMockRepository } from '../../test';
+import { User } from '../users/entities/user.entity';
+import { ConflictException } from '@nestjs/common';
 
 describe('ProjectsService', () => {
   let service: ProjectsService;
@@ -24,24 +26,61 @@ describe('ProjectsService', () => {
       // Arrange
       const createInput: CreateProjectInput = {
         name: 'My Study Project',
-        userId: 'user-123',
       };
+      const mockUser = {
+        id: 'user-123',
+        email: 'test@example.com',
+      } as User;
       const savedProject = {
         id: 'proj-1',
         name: 'My Study Project',
         userId: 'user-123',
       } as Project;
+      projectRepository.findOne.mockResolvedValue(null);
       projectRepository.create.mockReturnValue(savedProject);
       projectRepository.save.mockResolvedValue(savedProject);
 
       // Act
-      const result = await service.create(createInput);
+      const result = await service.create(createInput, mockUser);
 
       // Assert
       expect(result).toEqual(savedProject);
       expect(result.name).toBe('My Study Project');
-      expect(projectRepository.create).toHaveBeenCalledWith(createInput);
+      expect(projectRepository.findOne).toHaveBeenCalledWith({
+        where: { name: 'My Study Project', userId: 'user-123' },
+      });
+      expect(projectRepository.create).toHaveBeenCalledWith({
+        name: 'My Study Project',
+        userId: 'user-123',
+      });
       expect(projectRepository.save).toHaveBeenCalledWith(savedProject);
+    });
+
+    it('should throw ConflictException when project name already exists for user', async () => {
+      // Arrange
+      const createInput: CreateProjectInput = {
+        name: 'Existing Project',
+      };
+      const mockUser = {
+        id: 'user-123',
+        email: 'test@example.com',
+      } as User;
+      const existingProject = {
+        id: 'proj-1',
+        name: 'Existing Project',
+        userId: 'user-123',
+      } as Project;
+      projectRepository.findOne.mockResolvedValue(existingProject);
+
+      // Act & Assert
+      await expect(service.create(createInput, mockUser)).rejects.toThrow(
+        ConflictException,
+      );
+      await expect(service.create(createInput, mockUser)).rejects.toThrow(
+        'Project with name "Existing Project" already exists.',
+      );
+      expect(projectRepository.create).not.toHaveBeenCalled();
+      expect(projectRepository.save).not.toHaveBeenCalled();
     });
   });
 
