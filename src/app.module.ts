@@ -16,6 +16,7 @@ import { ConversationsModule } from './conversations/conversations.module';
 import { validate } from './config/env.validation';
 import { MessageChunkReferencesModule } from './message-chunk-references/message-chunk-references.module';
 import { DocumentProcessingJobsModule } from './document-processing-jobs/document-processing-jobs.module';
+import { GcsModule } from './gcs/gcs.module';
 import databaseConfig from './config/database.config';
 import { getTypeOrmConfig } from './config/typeorm.config';
 
@@ -54,6 +55,7 @@ import { getTypeOrmConfig } from './config/typeorm.config';
     ConversationsModule,
     MessageChunkReferencesModule,
     DocumentProcessingJobsModule,
+    GcsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

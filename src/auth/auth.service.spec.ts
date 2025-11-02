@@ -48,7 +48,7 @@ describe('AuthService', () => {
 
       // Assert
       expect(result).toEqual({
-        accessToken: token,
+        token,
         user,
       });
       expect(usersService.create).toHaveBeenCalledWith(createUserInput);
@@ -82,7 +82,7 @@ describe('AuthService', () => {
 
       // Assert
       expect(result).toEqual({
-        accessToken: token,
+        token,
         user,
       });
       expect(usersService.findByEmail).toHaveBeenCalledWith(loginInput.email);
