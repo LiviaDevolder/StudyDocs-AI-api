@@ -14,6 +14,7 @@ import { MessagesModule } from './messages/messages.module';
 import { DocumentChunksModule } from './document-chunks/document-chunks.module';
 import { ConversationsModule } from './conversations/conversations.module';
 import { validate } from './config/env.validation';
+import { MessageChunkReferencesModule } from './message-chunk-references/message-chunk-references.module';
 import databaseConfig from './config/database.config';
 
 @Module({
@@ -50,6 +51,7 @@ import databaseConfig from './config/database.config';
     MessagesModule,
     DocumentChunksModule,
     ConversationsModule,
+    MessageChunkReferencesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
