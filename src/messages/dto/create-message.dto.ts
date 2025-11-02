@@ -1,5 +1,5 @@
 import { InputType, Field } from '@nestjs/graphql';
-import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 
 @InputType()
 export class CreateMessageInput {
@@ -10,6 +10,11 @@ export class CreateMessageInput {
 
   @Field()
   @IsNotEmpty()
+  @IsUUID()
+  conversationId: string;
+
+  @Field()
+  @IsNotEmpty()
   @IsString()
   query: string;
 
@@ -17,4 +22,9 @@ export class CreateMessageInput {
   @IsNotEmpty()
   @IsString()
   response: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  role?: string;
 }

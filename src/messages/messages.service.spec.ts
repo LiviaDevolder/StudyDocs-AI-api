@@ -25,6 +25,7 @@ describe('MessagesService', () => {
       // Arrange
       const createMessageInput: CreateMessageInput = {
         projectId: 'project-123',
+        conversationId: 'conversation-123',
         query: 'What is this document about?',
         response: 'This document is about...',
       };

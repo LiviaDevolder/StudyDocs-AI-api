@@ -12,6 +12,7 @@ import { ProjectsModule } from './projects/projects.module';
 import { DocumentsModule } from './documents/documents.module';
 import { MessagesModule } from './messages/messages.module';
 import { DocumentChunksModule } from './document-chunks/document-chunks.module';
+import { ConversationsModule } from './conversations/conversations.module';
 import { validate } from './config/env.validation';
 import databaseConfig from './config/database.config';
 
@@ -48,6 +49,7 @@ import databaseConfig from './config/database.config';
     DocumentsModule,
     MessagesModule,
     DocumentChunksModule,
+    ConversationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

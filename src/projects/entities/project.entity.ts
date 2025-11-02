@@ -12,6 +12,7 @@ import { ObjectType, Field, ID } from '@nestjs/graphql';
 import { User } from '../../users/entities/user.entity';
 import { Document } from '../../documents/entities/document.entity';
 import { Message } from '../../messages/entities/message.entity';
+import { Conversation } from '../../conversations/entities/conversation.entity';
 
 @Entity('projects')
 @ObjectType()
@@ -44,6 +45,10 @@ export class Project {
   @OneToMany(() => Document, (document) => document.project)
   @Field(() => [Document], { nullable: true })
   documents: Document[];
+
+  @OneToMany(() => Conversation, (conversation) => conversation.project)
+  @Field(() => [Conversation], { nullable: true })
+  conversations: Conversation[];
 
   @OneToMany(() => Message, (message) => message.project)
   @Field(() => [Message], { nullable: true })
