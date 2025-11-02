@@ -6,7 +6,7 @@ import { CreateUserInput } from '../users/dto/create-user.dto';
 import { LoginInput } from './dto/login.dto';
 import { UnauthorizedException } from '@nestjs/common';
 import { User } from '../users/entities/user.entity';
-import { createMockService } from '../../test/mock-service.helper';
+import { createMockService } from '../../test';
 import { MockProxy } from 'jest-mock-extended';
 
 describe('AuthService', () => {

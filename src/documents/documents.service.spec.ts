@@ -5,7 +5,7 @@ import { Document } from './entities/document.entity';
 import { CreateDocumentInput } from './dto/create-document.dto';
 import { UpdateDocumentInput } from './dto/update-document.dto';
 import { NotFoundException } from '@nestjs/common';
-import { createMockRepository } from '../../test/mock-repository.helper';
+import { createMockRepository } from '../../test';
 
 describe('DocumentsService', () => {
   let service: DocumentsService;

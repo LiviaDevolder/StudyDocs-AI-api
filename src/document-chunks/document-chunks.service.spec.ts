@@ -5,7 +5,7 @@ import { DocumentChunk } from './entities/document-chunk.entity';
 import { CreateDocumentChunkInput } from './dto/create-document-chunk.dto';
 import { UpdateDocumentChunkInput } from './dto/update-document-chunk.dto';
 import { NotFoundException } from '@nestjs/common';
-import { createMockRepository } from '../../test/mock-repository.helper';
+import { createMockRepository } from '../../test';
 
 describe('DocumentChunksService', () => {
   let service: DocumentChunksService;

@@ -4,7 +4,7 @@ import { Repository, UpdateResult, DeleteResult } from 'typeorm';
 import { Project } from './entities/project.entity';
 import { CreateProjectInput } from './dto/create-project.dto';
 import { UpdateProjectInput } from './dto/update-project.dto';
-import { createMockRepository } from '../../test/mock-repository.helper';
+import { createMockRepository } from '../../test';
 
 describe('ProjectsService', () => {
   let service: ProjectsService;

@@ -5,7 +5,7 @@ import { Message } from './entities/message.entity';
 import { CreateMessageInput } from './dto/create-message.dto';
 import { UpdateMessageInput } from './dto/update-message.dto';
 import { NotFoundException } from '@nestjs/common';
-import { createMockRepository } from '../../test/mock-repository.helper';
+import { createMockRepository } from '../../test';
 
 describe('MessagesService', () => {
   let service: MessagesService;

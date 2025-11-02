@@ -5,7 +5,7 @@ import { User } from './entities/user.entity';
 import { CreateUserInput } from './dto/create-user.dto';
 import { UpdateUserInput } from './dto/update-user.dto';
 import { ConflictException, NotFoundException } from '@nestjs/common';
-import { createMockRepository } from '../../test/mock-repository.helper';
+import { createMockRepository } from '../../test';
 import * as bcrypt from 'bcrypt';
 
 jest.mock('bcrypt');
