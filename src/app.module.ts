@@ -16,7 +16,9 @@ import { ConversationsModule } from './conversations/conversations.module';
 import { validate } from './config/env.validation';
 import { MessageChunkReferencesModule } from './message-chunk-references/message-chunk-references.module';
 import { DocumentProcessingJobsModule } from './document-processing-jobs/document-processing-jobs.module';
+import { CommonModule } from './common/common.module';
 import databaseConfig from './config/database.config';
+import gcsConfig from './config/gcs.config';
 import { getTypeOrmConfig } from './config/typeorm.config';
 
 @Module({
@@ -24,7 +26,7 @@ import { getTypeOrmConfig } from './config/typeorm.config';
     ConfigModule.forRoot({
       isGlobal: true,
       validate,
-      load: [databaseConfig],
+      load: [databaseConfig, gcsConfig],
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -45,6 +47,7 @@ import { getTypeOrmConfig } from './config/typeorm.config';
       sortSchema: true,
       playground: true,
     }),
+    CommonModule,
     AuthModule,
     UsersModule,
     ProjectsModule,

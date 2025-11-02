@@ -3,6 +3,8 @@ import { DocumentsService } from './documents.service';
 import { Document } from './entities/document.entity';
 import { CreateDocumentInput } from './dto/create-document.dto';
 import { UpdateDocumentInput } from './dto/update-document.dto';
+import { UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Resolver(() => Document)
 export class DocumentsResolver {
@@ -43,5 +45,14 @@ export class DocumentsResolver {
   @Mutation(() => Boolean)
   async removeDocument(@Args('id') id: string): Promise<boolean> {
     return await this.documentsService.remove(id);
+  }
+
+  @Mutation(() => Document)
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadDocument(
+    @Args('projectId') projectId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<Document> {
+    return await this.documentsService.uploadDocument(projectId, file);
   }
 }
