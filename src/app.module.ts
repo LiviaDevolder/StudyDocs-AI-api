@@ -19,6 +19,7 @@ import { DocumentProcessingJobsModule } from './document-processing-jobs/documen
 import { CommonModule } from './common/common.module';
 import databaseConfig from './config/database.config';
 import gcsConfig from './config/gcs.config';
+import vertexAiConfig from './config/vertex-ai.config';
 import { getTypeOrmConfig } from './config/typeorm.config';
 
 @Module({
@@ -26,7 +27,7 @@ import { getTypeOrmConfig } from './config/typeorm.config';
     ConfigModule.forRoot({
       isGlobal: true,
       validate,
-      load: [databaseConfig, gcsConfig],
+      load: [databaseConfig, gcsConfig, vertexAiConfig],
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
