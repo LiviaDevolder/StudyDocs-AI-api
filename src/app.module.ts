@@ -47,6 +47,7 @@ import { getTypeOrmConfig } from './config/typeorm.config';
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       sortSchema: true,
       playground: true,
+      csrfPrevention: false,
     }),
     CommonModule,
     AuthModule,

@@ -39,3 +39,4 @@ lerna-debug.log*
 
 # GraphQL schema
 src/schema.gql
+studydocs-ai*.json

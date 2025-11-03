@@ -15,10 +15,10 @@ export class AuthService {
 
   async register(createUserInput: CreateUserInput): Promise<AuthResponse> {
     const user = await this.usersService.create(createUserInput);
-    const accessToken = this.generateToken(user);
+    const token = this.generateToken(user);
 
     return {
-      accessToken,
+      token,
       user,
     };
   }
@@ -30,10 +30,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const accessToken = this.generateToken(user);
+    const token = this.generateToken(user);
 
     return {
-      accessToken,
+      token,
       user,
     };
   }
