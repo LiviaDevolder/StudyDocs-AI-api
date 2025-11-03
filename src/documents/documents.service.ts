@@ -15,6 +15,9 @@ import { User } from '../users/entities/user.entity';
 import { Project } from '../projects/entities/project.entity';
 import { FileUpload } from '../types/graphql-upload';
 import { uploadConfig } from '../config/upload.config';
+import { DocumentProcessingJobsService } from '../document-processing-jobs/document-processing-jobs.service';
+import { DocumentProcessingQueueService } from '../document-processing-jobs/services/document-processing-queue.service';
+import { JobType } from '../document-processing-jobs/entities/document-processing-job.entity';
 
 @Injectable()
 export class DocumentsService {
@@ -26,6 +29,8 @@ export class DocumentsService {
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
     private readonly gcsService: GcsService,
+    private readonly jobsService: DocumentProcessingJobsService,
+    private readonly queueService: DocumentProcessingQueueService,
   ) {}
 
   async create(createDocumentInput: CreateDocumentInput): Promise<Document> {
@@ -154,7 +159,27 @@ export class DocumentsService {
         status: DocumentStatus.PENDING,
       });
 
-      return await this.documentRepository.save(document);
+      const savedDocument = await this.documentRepository.save(document);
+
+      try {
+        const job = await this.jobsService.create({
+          documentId: savedDocument.id,
+          type: JobType.FULL_PROCESS,
+        });
+
+        await this.queueService.addProcessingJob(savedDocument.id, job.id);
+
+        this.logger.log(
+          `Processing job created and queued for document ${savedDocument.id}`,
+        );
+      } catch (jobError) {
+        this.logger.error(
+          `Failed to create/queue processing job for document ${savedDocument.id}: ${jobError.message}`,
+          jobError.stack,
+        );
+      }
+
+      return savedDocument;
     } catch (error) {
       this.logger.error(
         `Failed to upload document for project ${projectId}: ${error.message}`,

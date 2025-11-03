@@ -101,7 +101,7 @@ export class GcsService {
           reject(error);
         });
 
-        blobStream.on('finish', (): UploadedFileInfo => {
+        blobStream.on('finish', () => {
           const publicUrl = `https://storage.googleapis.com/${this.bucketName}/${gcsPath}`;
 
           const uploadedFileInfo: UploadedFileInfo = {
@@ -114,14 +114,27 @@ export class GcsService {
 
           this.logger.log(`File uploaded successfully: ${gcsPath}`);
           resolve(uploadedFileInfo);
-
-          return uploadedFileInfo;
         });
 
         blobStream.end(file.buffer);
       });
     } catch (error) {
       this.logger.error(`Failed to upload file: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async downloadFile(gcsPath: string): Promise<Buffer> {
+    try {
+      this.logger.log(`Downloading file from GCS: ${gcsPath}`);
+      const file = this.bucket.file(gcsPath);
+      const [buffer] = await file.download();
+      this.logger.log(
+        `File downloaded successfully: ${gcsPath} (${buffer.length} bytes)`,
+      );
+      return buffer;
+    } catch (error) {
+      this.logger.error(`Failed to download file ${gcsPath}: ${error.message}`);
       throw error;
     }
   }
