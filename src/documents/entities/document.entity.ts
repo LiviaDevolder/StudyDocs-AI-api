@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { Project } from '../../projects/entities/project.entity';
 import { DocumentChunk } from '../../document-chunks/entities/document-chunk.entity';
+import { DocumentProcessingJob } from '../../document-processing-jobs/entities/document-processing-job.entity';
 
 export enum DocumentStatus {
   PENDING = 'pending',
@@ -68,6 +69,15 @@ export class Document {
   uploadedAt: Date;
 
   @Field(() => [DocumentChunk])
-  @OneToMany(() => DocumentChunk, (documentChunk) => documentChunk.document)
+  @OneToMany(() => DocumentChunk, (documentChunk) => documentChunk.document, {
+    cascade: true,
+  })
   chunks: DocumentChunk[];
+
+  @OneToMany(
+    () => DocumentProcessingJob,
+    (job) => job.document,
+    { cascade: true },
+  )
+  processingJobs: DocumentProcessingJob[];
 }

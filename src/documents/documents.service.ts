@@ -17,7 +17,7 @@ import { FileUpload } from '../types/graphql-upload';
 import { uploadConfig } from '../config/upload.config';
 import { DocumentProcessingJobsService } from '../document-processing-jobs/document-processing-jobs.service';
 import { DocumentProcessingQueueService } from '../document-processing-jobs/services/document-processing-queue.service';
-import { JobType } from '../document-processing-jobs/entities/document-processing-job.entity';
+import { JobType, DocumentProcessingJob } from '../document-processing-jobs/entities/document-processing-job.entity';
 
 @Injectable()
 export class DocumentsService {
@@ -28,6 +28,8 @@ export class DocumentsService {
     private readonly documentRepository: Repository<Document>,
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
+    @InjectRepository(DocumentProcessingJob)
+    private readonly jobRepository: Repository<DocumentProcessingJob>,
     private readonly gcsService: GcsService,
     private readonly jobsService: DocumentProcessingJobsService,
     private readonly queueService: DocumentProcessingQueueService,
@@ -75,21 +77,61 @@ export class DocumentsService {
 
   async remove(id: string): Promise<boolean> {
     const document = await this.findOne(id);
+    
+    try {
+      await this.jobRepository.delete({ documentId: id });
+      this.logger.log(`Deleted processing jobs for document ${id}`);
+    } catch (error) {
+      this.logger.error(`Failed to delete jobs for document ${id}: ${error.message}`);
+    }
+
     try {
       await this.gcsService.deleteFile(document.gcsPath);
+      this.logger.log(`Deleted file from GCS: ${document.gcsPath}`);
     } catch (error) {
-      console.error(`Failed to delete file from GCS: ${error.message}`);
+      this.logger.error(`Failed to delete file from GCS: ${error.message}`);
     }
 
     await this.documentRepository.remove(document);
+    this.logger.log(`Document ${id} removed successfully`);
+    
     return true;
   }
+
+  async removeByStatus(
+    status: DocumentStatus,
+    projectId?: string,
+  ): Promise<number> {
+    const where: any = { status };
+    if (projectId) {
+      where.projectId = projectId;
+    }
+
+    const documents = await this.documentRepository.find({ where });
+    
+    let removedCount = 0;
+    for (const document of documents) {
+      try {
+        await this.remove(document.id);
+        removedCount++;
+      } catch (error) {
+        this.logger.error(
+          `Failed to remove document ${document.id}: ${error.message}`,
+        );
+      }
+    }
+
+    this.logger.log(
+      `Removed ${removedCount} documents with status ${status}`,
+    );
+    return removedCount;
+  }
+
   async uploadDocument(
     projectId: string,
     filePromise: Promise<FileUpload>,
     user: User,
   ): Promise<Document> {
-    // Verify project exists and user owns it
     const project = await this.projectRepository.findOne({
       where: { id: projectId },
     });
@@ -104,11 +146,9 @@ export class DocumentsService {
       );
     }
 
-    // Get file from promise (validation already done by FileValidationPipe)
     const fileUpload = await filePromise;
 
     try {
-      // Read file stream into buffer with size limit
       const chunks: Uint8Array[] = [];
       let totalSize = 0;
 
@@ -118,7 +158,6 @@ export class DocumentsService {
         const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
         totalSize += buffer.length;
 
-        // Check size limit during streaming
         if (totalSize > uploadConfig.maxFileSize) {
           stream.destroy();
           throw new BadRequestException(
@@ -131,7 +170,6 @@ export class DocumentsService {
 
       const buffer = Buffer.concat(chunks);
 
-      // Create file input for GcsService
       const fileInput: UploadFileInput = {
         buffer,
         originalname: fileUpload.filename,
@@ -139,7 +177,6 @@ export class DocumentsService {
         size: totalSize,
       };
 
-      // Upload to GCS
       const uploadedFileInfo = await this.gcsService.uploadFile(
         fileInput,
         `projects/${projectId}`,
@@ -149,7 +186,6 @@ export class DocumentsService {
         `File "${fileUpload.filename}" uploaded successfully for project ${projectId} by user ${user.id}`,
       );
 
-      // Save document metadata to database
       const document = this.documentRepository.create({
         projectId,
         name: fileUpload.filename,

@@ -1,6 +1,5 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
 import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.mjs';
 import { uploadConfig } from './config/upload.config';
 
@@ -20,8 +19,6 @@ async function bootstrap() {
       maxFiles: uploadConfig.maxFiles,
     }),
   );
-
-  app.useGlobalPipes(new ValidationPipe());
 
   await app.listen(process.env.PORT ?? 3000);
 }

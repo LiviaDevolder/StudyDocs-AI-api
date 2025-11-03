@@ -6,8 +6,29 @@ export const uploadConfig = {
     'text/plain',
     'text/markdown',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'image/svg+xml',
+    'image/bmp',
+    'image/tiff',
   ],
-  allowedExtensions: ['.pdf', '.txt', '.md', '.docx'],
+  allowedExtensions: [
+    '.pdf',
+    '.txt',
+    '.md',
+    '.docx',
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.gif',
+    '.webp',
+    '.svg',
+    '.bmp',
+    '.tiff',
+    '.tif',
+  ],
 };
 
 export const getMimeTypeDescription = (mimeType: string): string => {
@@ -17,6 +38,13 @@ export const getMimeTypeDescription = (mimeType: string): string => {
     'text/markdown': 'Markdown',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
       'DOCX',
+    'image/jpeg': 'JPEG',
+    'image/png': 'PNG',
+    'image/gif': 'GIF',
+    'image/webp': 'WebP',
+    'image/svg+xml': 'SVG',
+    'image/bmp': 'BMP',
+    'image/tiff': 'TIFF',
   };
   return mimeTypeMap[mimeType] || mimeType;
 };

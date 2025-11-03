@@ -1,7 +1,7 @@
-import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { DocumentsService } from './documents.service';
-import { Document } from './entities/document.entity';
+import { Document, DocumentStatus } from './entities/document.entity';
 import { CreateDocumentInput } from './dto/create-document.dto';
 import { UpdateDocumentInput } from './dto/update-document.dto';
 import { GqlAuthGuard } from '../auth/guards/gql-auth.guard';
@@ -52,14 +52,28 @@ export class DocumentsResolver {
     return await this.documentsService.remove(id);
   }
 
+  @Mutation(() => Int, {
+    description: 'Remove all documents with a specific status (e.g., pending, failed)',
+  })
+  @UseGuards(GqlAuthGuard)
+  async removeDocumentsByStatus(
+    @Args('status', { type: () => DocumentStatus }) status: DocumentStatus,
+    @Args('projectId', { nullable: true }) projectId?: string,
+  ): Promise<number> {
+    return await this.documentsService.removeByStatus(status, projectId);
+  }
+
   @Mutation(() => Document)
   @UseGuards(GqlAuthGuard)
   async uploadDocument(
     @Args('projectId') projectId: string,
-    @Args({ name: 'file', type: () => GraphQLUpload }, FileValidationPipe)
-    file: Promise<FileUpload>,
+    @Args({ name: 'file', type: () => GraphQLUpload })
+    filePromise: Promise<FileUpload>,
     @CurrentUser() user: User,
   ): Promise<Document> {
-    return await this.documentsService.uploadDocument(projectId, file, user);
+    const fileValidationPipe = new FileValidationPipe();
+    const file = await fileValidationPipe.transform(filePromise);
+    
+    return await this.documentsService.uploadDocument(projectId, Promise.resolve(file), user);
   }
 }

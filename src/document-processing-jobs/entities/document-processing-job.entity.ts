@@ -47,7 +47,7 @@ export class DocumentProcessingJob {
   documentId: string;
 
   @Field(() => Document)
-  @ManyToOne(() => Document)
+  @ManyToOne(() => Document, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'document_id' })
   document: Document;
 

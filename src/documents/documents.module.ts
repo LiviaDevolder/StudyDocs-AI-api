@@ -6,10 +6,11 @@ import { Document } from './entities/document.entity';
 import { Project } from '../projects/entities/project.entity';
 import { CommonModule } from '../common/common.module';
 import { DocumentProcessingJobsModule } from '../document-processing-jobs/document-processing-jobs.module';
+import { DocumentProcessingJob } from '../document-processing-jobs/entities/document-processing-job.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Document, Project]),
+    TypeOrmModule.forFeature([Document, Project, DocumentProcessingJob]),
     CommonModule,
     DocumentProcessingJobsModule,
   ],
